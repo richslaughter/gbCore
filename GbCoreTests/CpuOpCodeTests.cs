@@ -11,11 +11,10 @@ using System;
  Nn = immediate 2 bytes
  Ld = Load
 
- Ld Rr d16 = Load immedate 2 bytes to Register Rr
- Ld BC d16 = Load immedate 2 bytes to Register BC
+ Ld R d8 = Load immediate 1 byte to Register Rr
+ Ld Rr d16 = Load immediate 2 bytes to Register Rr
+ Ld BC d16 = Load immediate 2 bytes to Register BC
  Ld B C = Copy value of C into B
-
- 
 */
 
 namespace GbCoreTests
@@ -28,7 +27,7 @@ namespace GbCoreTests
         [DataRow(ChangeType.DE, (byte)0x11)]
         [DataRow(ChangeType.HL, (byte)0x21)]
         [DataRow(ChangeType.StackPointer, (byte)0x31)]
-        public void TestLdRrD16(ChangeType register, byte opCode)
+        public void TestLd_Rr_D16(ChangeType register, byte opCode)
         {
             //setup
             var prog = new byte[]{opCode, 0xFE, 0xEF}; //LD rr,nn, rr = 0xEFFE
@@ -54,7 +53,55 @@ namespace GbCoreTests
         [DataRow(ChangeType.B, ChangeType.H, OpCode.LD_B_H)]
         [DataRow(ChangeType.B, ChangeType.L, OpCode.LD_B_L)]
         [DataRow(ChangeType.B, ChangeType.A, OpCode.LD_B_A)]
-        public void TestLdRR(ChangeType targetRegister, ChangeType sourceRegister, OpCode opCode)
+
+        [DataRow(ChangeType.C, ChangeType.B, OpCode.LD_C_B)]
+        [DataRow(ChangeType.C, ChangeType.C, OpCode.LD_C_C)]
+        [DataRow(ChangeType.C, ChangeType.D, OpCode.LD_C_D)]
+        [DataRow(ChangeType.C, ChangeType.E, OpCode.LD_C_E)]
+        [DataRow(ChangeType.C, ChangeType.H, OpCode.LD_C_H)]
+        [DataRow(ChangeType.C, ChangeType.L, OpCode.LD_C_L)]
+        [DataRow(ChangeType.C, ChangeType.A, OpCode.LD_C_A)]
+
+        [DataRow(ChangeType.D, ChangeType.B, OpCode.LD_D_B)]
+        [DataRow(ChangeType.D, ChangeType.C, OpCode.LD_D_C)]
+        [DataRow(ChangeType.D, ChangeType.D, OpCode.LD_D_D)]
+        [DataRow(ChangeType.D, ChangeType.E, OpCode.LD_D_E)]
+        [DataRow(ChangeType.D, ChangeType.H, OpCode.LD_D_H)]
+        [DataRow(ChangeType.D, ChangeType.L, OpCode.LD_D_L)]
+        [DataRow(ChangeType.D, ChangeType.A, OpCode.LD_D_A)]
+
+        [DataRow(ChangeType.E, ChangeType.B, OpCode.LD_E_B)]
+        [DataRow(ChangeType.E, ChangeType.C, OpCode.LD_E_C)]
+        [DataRow(ChangeType.E, ChangeType.D, OpCode.LD_E_D)]
+        [DataRow(ChangeType.E, ChangeType.E, OpCode.LD_E_E)]
+        [DataRow(ChangeType.E, ChangeType.H, OpCode.LD_E_H)]
+        [DataRow(ChangeType.E, ChangeType.L, OpCode.LD_E_L)]
+        [DataRow(ChangeType.E, ChangeType.A, OpCode.LD_E_A)]
+
+        [DataRow(ChangeType.H, ChangeType.B, OpCode.LD_H_B)]
+        [DataRow(ChangeType.H, ChangeType.C, OpCode.LD_H_C)]
+        [DataRow(ChangeType.H, ChangeType.D, OpCode.LD_H_D)]
+        [DataRow(ChangeType.H, ChangeType.E, OpCode.LD_H_E)]
+        [DataRow(ChangeType.H, ChangeType.H, OpCode.LD_H_H)]
+        [DataRow(ChangeType.H, ChangeType.L, OpCode.LD_H_L)]
+        [DataRow(ChangeType.H, ChangeType.A, OpCode.LD_H_A)]
+
+        [DataRow(ChangeType.L, ChangeType.B, OpCode.LD_L_B)]
+        [DataRow(ChangeType.L, ChangeType.C, OpCode.LD_L_C)]
+        [DataRow(ChangeType.L, ChangeType.D, OpCode.LD_L_D)]
+        [DataRow(ChangeType.L, ChangeType.E, OpCode.LD_L_E)]
+        [DataRow(ChangeType.L, ChangeType.H, OpCode.LD_L_H)]
+        [DataRow(ChangeType.L, ChangeType.L, OpCode.LD_L_L)]
+        [DataRow(ChangeType.L, ChangeType.A, OpCode.LD_L_A)]
+
+        [DataRow(ChangeType.A, ChangeType.B, OpCode.LD_A_B)]
+        [DataRow(ChangeType.A, ChangeType.C, OpCode.LD_A_C)]
+        [DataRow(ChangeType.A, ChangeType.D, OpCode.LD_A_D)]
+        [DataRow(ChangeType.A, ChangeType.E, OpCode.LD_A_E)]
+        [DataRow(ChangeType.A, ChangeType.H, OpCode.LD_A_H)]
+        [DataRow(ChangeType.A, ChangeType.L, OpCode.LD_A_L)]
+        [DataRow(ChangeType.A, ChangeType.A, OpCode.LD_A_A)]
+        public void TestLd_R_R(ChangeType targetRegister, ChangeType sourceRegister, OpCode opCode)
         {
             //setup
             byte testValue = 0xFE;
@@ -75,8 +122,82 @@ namespace GbCoreTests
             ValidateState(cpuExpected, cpu);
         }
 
+        [DataTestMethod]
+        [DataRow(ChangeType.B, OpCode.LD_B_addrHL)]
+        [DataRow(ChangeType.C, OpCode.LD_C_addrHL)]
+        [DataRow(ChangeType.D, OpCode.LD_D_addrHL)]
+        [DataRow(ChangeType.E, OpCode.LD_E_addrHL)]
+        [DataRow(ChangeType.H, OpCode.LD_H_addrHL)]
+        [DataRow(ChangeType.L, OpCode.LD_L_addrHL)]
+        [DataRow(ChangeType.A, OpCode.LD_A_addrHL)]
+        public void TestLd_R_addrHL(ChangeType targetRegister, OpCode opCode)
+        {
+            //setup
+            byte testValue = 0x0E;
+            ushort testAddress = 0xF1;
+            var prog = new byte[256];
+            prog[0] = (byte)opCode; //LD r,(HL)
+            var mmu = new SimpleMmu(prog);
+            var cpu = new Cpu(mmu);
+            //set value to be copied to target register in memory
+            mmu.WriteByte(testAddress, testValue);
+            //put address to be copied from into HL
+            cpu.HL = testAddress;
+            
+            //put some nonsense in target register to make sure it changes
+            //H/L are special cases as they affect the target address, so can't be altered
+            if(targetRegister != ChangeType.H && targetRegister != ChangeType.L) {
+                SetValue(cpu, targetRegister, 0xFF);
+            }
+
+            //expected outcome
+            var cpuExpected = cpu.CopyState();
+            cpuExpected.Cycles = 8;
+            cpuExpected.ProgramCounter = 1;
+            SetValue(cpuExpected, targetRegister, testValue);
+
+            //execute & validate
+            cpu.Step();
+            ValidateState(cpuExpected, cpu);
+        }
+
+        [DataTestMethod]
+        [DataRow(ChangeType.B, OpCode.LD_addrHL_B)]
+        [DataRow(ChangeType.C, OpCode.LD_addrHL_C)]
+        [DataRow(ChangeType.D, OpCode.LD_addrHL_D)]
+        [DataRow(ChangeType.E, OpCode.LD_addrHL_E)]
+        [DataRow(ChangeType.H, OpCode.LD_addrHL_H)]
+        [DataRow(ChangeType.L, OpCode.LD_addrHL_L)]
+        [DataRow(ChangeType.A, OpCode.LD_addrHL_A)]
+        public void TestLd_addrHL_R(ChangeType sourceRegister, OpCode opCode)
+        {
+            //setup
+            byte testValue = 0x0E;
+            ushort testAddress = 0xF1;
+            var prog = new byte[256];
+            prog[0] = (byte)opCode; //LD r,(HL)
+            var mmu = new SimpleMmu(prog);
+            var cpu = new Cpu(mmu);
+            //put nonsense in target address
+            mmu.WriteByte(testAddress, 0xFF);
+            //set value in register to be copied
+            SetValue(cpu, sourceRegister, testValue);
+            //set HL to address to be copied to
+            cpu.HL = testAddress;
+
+            //expected outcome
+            var cpuExpected = cpu.CopyState();
+            cpuExpected.Cycles = 8;
+            cpuExpected.ProgramCounter = 1;
+            cpuExpected.Mmu.WriteByte(testAddress, testValue);
+
+            //execute & validate
+            cpu.Step();
+            ValidateState(cpuExpected, cpu);
+        }
+
         [TestMethod]
-        public void TestXorA()
+        public void TestXor_A()
         {
             //setup
             var prog = new byte[]{0xAF}; //XOR A
@@ -107,7 +228,7 @@ namespace GbCoreTests
         [DataRow((byte)0xF, (byte)0x0, (byte)0xF, false)]
         [DataRow((byte)0x8, (byte)0x1, (byte)0x9, false)]
         [DataRow((byte)0x9, (byte)0x1, (byte)0x8, false)]
-        public void TestXorR(byte aRegisterVal, byte xorRegisterVal, byte expectedResult, bool expectedZeroFlag)
+        public void TestXor_R(byte aRegisterVal, byte xorRegisterVal, byte expectedResult, bool expectedZeroFlag)
         {
             TestXor(0xA8, ChangeType.B, aRegisterVal, xorRegisterVal, expectedResult, expectedZeroFlag); //XORB
             TestXor(0xA9, ChangeType.C, aRegisterVal, xorRegisterVal, expectedResult, expectedZeroFlag); //XORC
@@ -193,11 +314,12 @@ namespace GbCoreTests
             Assert.AreEqual(cpuExpected.StackPointer, cpu.StackPointer, "Unexpected StackPointer value!");
             Assert.AreEqual(cpuExpected.Cycles, cpu.Cycles, "Unexpected Cycles value!");
 
-            //memory
+            //FIXME: memory
+            Assert.AreEqual(cpuExpected.Mmu.DumpState(), cpu.Mmu.DumpState(), "Unexpected memory values");
 
         }
 
-        private uint GetValue(Cpu state, ChangeType type){
+        /*private uint GetValue(Cpu state, ChangeType type){
             switch(type){
                 case ChangeType.A:
                     return state.A;
@@ -217,7 +339,7 @@ namespace GbCoreTests
                     return state.Cycles;
             }
             throw new InvalidOperationException("Unsupported ChangeType in GetValue");
-        }
+        }*/
 
         private void SetValue(Cpu state, ChangeType type, uint value){
             switch(type){

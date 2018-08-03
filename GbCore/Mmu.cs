@@ -5,7 +5,11 @@ namespace GbCore
     public interface IMmu
     {
         byte ReadByte(ushort address);
+        void WriteByte(ushort address, byte value);
         ushort ReadWord(ushort address);
+
+        IMmu CopyState();
+        byte[] DumpState();
     }
 
     public class Mmu : IMmu
@@ -53,6 +57,16 @@ namespace GbCore
 
         public ushort ReadWord(ushort address){
             return (ushort)((ReadByte((ushort)(address + 1)) << 8) | ReadByte(address));
+        }
+
+        public IMmu CopyState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public byte[] DumpState()
+        {
+            throw new NotImplementedException();
         }
     }
 }

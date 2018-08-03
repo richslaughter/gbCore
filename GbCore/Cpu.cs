@@ -38,16 +38,18 @@ namespace GbCore
         IMmu mmu;
         Dictionary<OpCode, Action> ops;
 
+        public IMmu Mmu { get => mmu; }
+
         public Cpu(IMmu mmu){
             this.mmu = mmu;
 
             ops = new Dictionary<OpCode, Action>()
             {
                 [OpCode.Noop] = () => { Cycles+=4; },
-                [OpCode.LDBCnn] = () => { BC = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
-                [OpCode.LDDEnn] = () => { DE = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
-                [OpCode.LDHLnn] = () => { HL = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
-                [OpCode.LDSPnn] = () => { StackPointer = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
+                [OpCode.LD_BC_nn] = () => { BC = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
+                [OpCode.LD_DE_nn] = () => { DE = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
+                [OpCode.LD_HL_nn] = () => { HL = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
+                [OpCode.LD_SP_nn] = () => { StackPointer = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
                 
                 [OpCode.LD_B_B] = () => { B = B; Cycles+=4;},
                 [OpCode.LD_B_C] = () => { B = C; Cycles+=4;},
@@ -55,16 +57,80 @@ namespace GbCore
                 [OpCode.LD_B_E] = () => { B = E; Cycles+=4;},
                 [OpCode.LD_B_H] = () => { B = H; Cycles+=4;},
                 [OpCode.LD_B_L] = () => { B = L; Cycles+=4;},
-                //[OpCode.LD_B_aHL] = () => { B = L; Cycles+=4;}, //FIXME
+                [OpCode.LD_B_addrHL] = () => { B = mmu.ReadByte(HL); Cycles+=8;},
                 [OpCode.LD_B_A] = () => { B = A; Cycles+=4;},
+
+                [OpCode.LD_C_B] = () => { C = B; Cycles+=4;},
+                [OpCode.LD_C_C] = () => { C = C; Cycles+=4;},
+                [OpCode.LD_C_D] = () => { C = D; Cycles+=4;},
+                [OpCode.LD_C_E] = () => { C = E; Cycles+=4;},
+                [OpCode.LD_C_H] = () => { C = H; Cycles+=4;},
+                [OpCode.LD_C_L] = () => { C = L; Cycles+=4;},
+                [OpCode.LD_C_addrHL] = () => { C = mmu.ReadByte(HL); Cycles+=8;},
+                [OpCode.LD_C_A] = () => { C = A; Cycles+=4;},
+
+                [OpCode.LD_D_B] = () => { D = B; Cycles+=4;},
+                [OpCode.LD_D_C] = () => { D = C; Cycles+=4;},
+                [OpCode.LD_D_D] = () => { D = D; Cycles+=4;},
+                [OpCode.LD_D_E] = () => { D = E; Cycles+=4;},
+                [OpCode.LD_D_H] = () => { D = H; Cycles+=4;},
+                [OpCode.LD_D_L] = () => { D = L; Cycles+=4;},
+                [OpCode.LD_D_addrHL] = () => { D = mmu.ReadByte(HL); Cycles+=8;},
+                [OpCode.LD_D_A] = () => { D = A; Cycles+=4;},
+
+                [OpCode.LD_E_B] = () => { E = B; Cycles+=4;},
+                [OpCode.LD_E_C] = () => { E = C; Cycles+=4;},
+                [OpCode.LD_E_D] = () => { E = D; Cycles+=4;},
+                [OpCode.LD_E_E] = () => { E = E; Cycles+=4;},
+                [OpCode.LD_E_H] = () => { E = H; Cycles+=4;},
+                [OpCode.LD_E_L] = () => { E = L; Cycles+=4;},
+                [OpCode.LD_E_addrHL] = () => { E = mmu.ReadByte(HL); Cycles+=8;},
+                [OpCode.LD_E_A] = () => { E = A; Cycles+=4;},
+
+                [OpCode.LD_H_B] = () => { H = B; Cycles+=4;},
+                [OpCode.LD_H_C] = () => { H = C; Cycles+=4;},
+                [OpCode.LD_H_D] = () => { H = D; Cycles+=4;},
+                [OpCode.LD_H_E] = () => { H = E; Cycles+=4;},
+                [OpCode.LD_H_H] = () => { H = H; Cycles+=4;},
+                [OpCode.LD_H_L] = () => { H = L; Cycles+=4;},
+                [OpCode.LD_H_addrHL] = () => { H = mmu.ReadByte(HL); Cycles+=8;},
+                [OpCode.LD_H_A] = () => { H = A; Cycles+=4;},
+
+                [OpCode.LD_L_B] = () => { L = B; Cycles+=4;},
+                [OpCode.LD_L_C] = () => { L = C; Cycles+=4;},
+                [OpCode.LD_L_D] = () => { L = D; Cycles+=4;},
+                [OpCode.LD_L_E] = () => { L = E; Cycles+=4;},
+                [OpCode.LD_L_H] = () => { L = H; Cycles+=4;},
+                [OpCode.LD_L_L] = () => { L = L; Cycles+=4;},
+                [OpCode.LD_L_addrHL] = () => { L = mmu.ReadByte(HL); Cycles+=8;},
+                [OpCode.LD_L_A] = () => { L = A; Cycles+=4;},
+
+                [OpCode.LD_addrHL_B] = () => { mmu.WriteByte(HL, B); Cycles+=8;},
+                [OpCode.LD_addrHL_C] = () => { mmu.WriteByte(HL, C); Cycles+=8;},
+                [OpCode.LD_addrHL_D] = () => { mmu.WriteByte(HL, D); Cycles+=8;},
+                [OpCode.LD_addrHL_E] = () => { mmu.WriteByte(HL, E); Cycles+=8;},
+                [OpCode.LD_addrHL_H] = () => { mmu.WriteByte(HL, H); Cycles+=8;},
+                [OpCode.LD_addrHL_L] = () => { mmu.WriteByte(HL, L); Cycles+=8;},
+                [OpCode.LD_addrHL_A] = () => { mmu.WriteByte(HL, A); Cycles+=8;},
+
+                //TODO: HALT
+
+                [OpCode.LD_A_B] = () => { A = B; Cycles+=4;},
+                [OpCode.LD_A_C] = () => { A = C; Cycles+=4;},
+                [OpCode.LD_A_D] = () => { A = D; Cycles+=4;},
+                [OpCode.LD_A_E] = () => { A = E; Cycles+=4;},
+                [OpCode.LD_A_H] = () => { A = H; Cycles+=4;},
+                [OpCode.LD_A_L] = () => { A = L; Cycles+=4;},
+                [OpCode.LD_A_addrHL] = () => { A = mmu.ReadByte(HL); Cycles+=8;},
+                [OpCode.LD_A_A] = () => { A = A; Cycles+=4;},
                 
-                [OpCode.XorA] = () => { A ^= A; Cycles+=4; F = 0; ZeroFlag = A == 0;},
-                [OpCode.XorB] = () => { A ^= B; Cycles+=4; F = 0; ZeroFlag = A == 0;},
-                [OpCode.XorC] = () => { A ^= C; Cycles+=4; F = 0; ZeroFlag = A == 0;},
-                [OpCode.XorD] = () => { A ^= D; Cycles+=4; F = 0; ZeroFlag = A == 0;},
-                [OpCode.XorE] = () => { A ^= E; Cycles+=4; F = 0; ZeroFlag = A == 0;},
-                [OpCode.XorH] = () => { A ^= H; Cycles+=4; F = 0; ZeroFlag = A == 0;},
-                [OpCode.XorL] = () => { A ^= L; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Xor_A] = () => { A ^= A; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Xor_B] = () => { A ^= B; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Xor_C] = () => { A ^= C; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Xor_D] = () => { A ^= D; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Xor_E] = () => { A ^= E; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Xor_H] = () => { A ^= H; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Xor_L] = () => { A ^= L; Cycles+=4; F = 0; ZeroFlag = A == 0;},
             };
 
         }
@@ -84,7 +150,7 @@ namespace GbCore
 
         public Cpu CopyState()
         {
-            var cpu = new Cpu(null);
+            var cpu = new Cpu(mmu.CopyState());
             cpu.StackPointer = StackPointer;
             cpu.ProgramCounter = ProgramCounter;
             cpu.Cycles = Cycles;
@@ -93,34 +159,9 @@ namespace GbCore
             cpu.DE = DE;
             cpu.HL = HL;
 
+            //TODO: memory?
+
             return cpu;
         }
-    } 
-
-    public enum OpCode{
-        Noop = 0x00,
-        LDBCnn = 0x01,
-        LDDEnn = 0x11,
-        LDHLnn = 0x21,
-        LDSPnn = 0x31,
-        
-        LD_B_B = 0x40,
-        LD_B_C = 0x41,
-        LD_B_D = 0x42,
-        LD_B_E = 0x43,
-        LD_B_H = 0x44,
-        LD_B_L = 0x45,
-        LD_B_aHL = 0x46,//FIXME:
-        LD_B_A = 0x47, 
-
-        XorB = 0xA8,
-        XorC = 0xA9,
-        XorD = 0xAA,
-        XorE = 0xAB,
-        XorH = 0xAC,
-        XorL = 0xAD,
-        XorA = 0xAF,
-
-        
     }
 }
