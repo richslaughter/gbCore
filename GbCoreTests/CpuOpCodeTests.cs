@@ -23,6 +23,32 @@ namespace GbCoreTests
     public class CpuOpCodeTests
     {
         [DataTestMethod]
+        [DataRow(ChangeType.B, OpCode.LD_B_n)]
+        [DataRow(ChangeType.C, OpCode.LD_C_n)]
+        [DataRow(ChangeType.D, OpCode.LD_D_n)]
+        [DataRow(ChangeType.E, OpCode.LD_E_n)]
+        [DataRow(ChangeType.H, OpCode.LD_H_n)]
+        [DataRow(ChangeType.L, OpCode.LD_L_n)]
+        [DataRow(ChangeType.A, OpCode.LD_A_n)]
+        public void TestLd_R_D8(ChangeType register, OpCode opCode)
+        {
+            //setup
+            var prog = new byte[]{(byte)opCode, 0xFE}; //LD r,n
+            var mmu = new SimpleMmu(prog);
+            var cpu = new Cpu(mmu);
+            
+            //expected outcome
+            var cpuExpected = cpu.CopyState();
+            cpuExpected.Cycles = 8;
+            cpuExpected.ProgramCounter = 2;
+            SetValue(cpuExpected, register, 0xFE);
+
+            //execute & validate
+            cpu.Step();
+            ValidateState(cpuExpected, cpu);
+        }
+
+        [DataTestMethod]
         [DataRow(ChangeType.BC, (byte)0x01)]
         [DataRow(ChangeType.DE, (byte)0x11)]
         [DataRow(ChangeType.HL, (byte)0x21)]
@@ -196,6 +222,89 @@ namespace GbCoreTests
             ValidateState(cpuExpected, cpu);
         }
 
+        public void TestLdi_addrHL_A()
+        {
+            //setup
+            byte testValue = 0x0E;
+            ushort testAddress = 0xF1;
+            var prog = new byte[256];
+            prog[0] = (byte)OpCode.LDD_addrHL_A; //LDD (HL),A
+            var mmu = new SimpleMmu(prog);
+            var cpu = new Cpu(mmu);
+            //put nonsense in target address
+            mmu.WriteByte(testAddress, 0xFF);
+            //set value in register to be copied
+            cpu.A = testValue;
+            //set HL to address to be copied to
+            cpu.HL = testAddress;
+
+            //expected outcome
+            var cpuExpected = cpu.CopyState();
+            cpuExpected.Cycles = 8;
+            cpuExpected.ProgramCounter = 1;
+            cpuExpected.Mmu.WriteByte(testAddress, testValue);
+            cpuExpected.HL = (ushort)(testAddress+1);
+
+            //execute & validate
+            cpu.Step();
+            ValidateState(cpuExpected, cpu);
+        }
+
+        public void TestLdd_addrHL_A()
+        {
+            //setup
+            byte testValue = 0x0E;
+            ushort testAddress = 0xF1;
+            var prog = new byte[256];
+            prog[0] = (byte)OpCode.LDD_addrHL_A; //LDD (HL),A
+            var mmu = new SimpleMmu(prog);
+            var cpu = new Cpu(mmu);
+            //put nonsense in target address
+            mmu.WriteByte(testAddress, 0xFF);
+            //set value in register to be copied
+            cpu.A = testValue;
+            //set HL to address to be copied to
+            cpu.HL = testAddress;
+
+            //expected outcome
+            var cpuExpected = cpu.CopyState();
+            cpuExpected.Cycles = 8;
+            cpuExpected.ProgramCounter = 1;
+            cpuExpected.Mmu.WriteByte(testAddress, testValue);
+            cpuExpected.HL = (ushort)(testAddress-1);
+
+            //execute & validate
+            cpu.Step();
+            ValidateState(cpuExpected, cpu);
+        }
+
+        [TestMethod]
+        public void TestLd_addrHL_n()
+        {
+            //setup
+            byte testValue = 0x0E;
+            ushort testAddress = 0xF1;
+            var prog = new byte[256];
+            prog[0] = (byte)OpCode.LD_addrHL_n;
+            prog[1] = testValue;
+            var mmu = new SimpleMmu(prog);
+            var cpu = new Cpu(mmu);
+            //put nonsense in target address
+            mmu.WriteByte(testAddress, 0xFF);
+            //set HL to address to be copied to
+            cpu.HL = testAddress;
+
+            //expected outcome
+            var cpuExpected = cpu.CopyState();
+            cpuExpected.Cycles = 12;
+            cpuExpected.ProgramCounter = 2;
+            cpuExpected.Mmu.WriteByte(testAddress, testValue);
+
+            //execute & validate
+            cpu.Step();
+            ValidateState(cpuExpected, cpu);
+        }
+
         [TestMethod]
         public void TestXor_A()
         {
@@ -264,6 +373,77 @@ namespace GbCoreTests
             ValidateState(cpuExpected, cpu);
         }
 
+        [DataTestMethod]
+        [DataRow((byte)0x00, true)]
+        [DataRow((byte)0x0F, false)]
+        public void TestOr_A(byte value, bool expectedZeroFlag)
+        {
+            //setup
+            var prog = new byte[]{(byte)OpCode.Or_A};
+            var mmu = new SimpleMmu(prog);
+            var cpu = new Cpu(mmu);
+            cpu.AF = 0xFF;
+            cpu.BC = 0x08;
+            cpu.DE = 0x08;
+            cpu.HL = 0x08;
+            cpu.A = value;
+
+            //expected outcome
+            var cpuExpected = cpu.CopyState();
+            cpuExpected.Cycles = 4;
+            cpuExpected.ProgramCounter = 1;
+            cpuExpected.A = value;
+            cpuExpected.F = 0;
+            cpuExpected.ZeroFlag = expectedZeroFlag;
+
+            //execute & validate
+            cpu.Step();
+            ValidateState(cpuExpected, cpu);
+        }
+
+        [DataTestMethod]
+        [DataRow((byte)0x0, (byte)0x0, (byte)0x0, true)]
+        [DataRow((byte)0xF, (byte)0xF, (byte)0xF, false)]
+        [DataRow((byte)0x0, (byte)0xF, (byte)0xF, false)]
+        [DataRow((byte)0xF, (byte)0x0, (byte)0xF, false)]
+        [DataRow((byte)0x8, (byte)0x1, (byte)0x9, false)]
+        [DataRow((byte)0x9, (byte)0x1, (byte)0x9, false)]
+        public void TestOr_R(byte aRegisterVal, byte orRegisterVal, byte expectedResult, bool expectedZeroFlag)
+        {
+            TestOr(OpCode.Or_B, ChangeType.B, aRegisterVal, orRegisterVal, expectedResult, expectedZeroFlag); //ORB
+            TestOr(OpCode.Or_C, ChangeType.C, aRegisterVal, orRegisterVal, expectedResult, expectedZeroFlag); //ORC
+            TestOr(OpCode.Or_D, ChangeType.D, aRegisterVal, orRegisterVal, expectedResult, expectedZeroFlag); //ORD
+            TestOr(OpCode.Or_E, ChangeType.E, aRegisterVal, orRegisterVal, expectedResult, expectedZeroFlag); //ORE
+            TestOr(OpCode.Or_H, ChangeType.H, aRegisterVal, orRegisterVal, expectedResult, expectedZeroFlag); //ORH
+            TestOr(OpCode.Or_L, ChangeType.L, aRegisterVal, orRegisterVal, expectedResult, expectedZeroFlag); //ORL
+        }
+
+        public void TestOr(OpCode opCode, ChangeType orRegister, byte aRegisterVal, byte orRegisterVal, byte expectedResult, bool expectedZeroFlag)
+        {
+            //setup
+            var prog = new byte[]{(byte)opCode};
+            var mmu = new SimpleMmu(prog);
+            var cpu = new Cpu(mmu);
+            cpu.AF = 0xFF;
+            cpu.BC = 0xFF;
+            cpu.DE = 0xFF;
+            cpu.HL = 0xFF;
+            cpu.A = aRegisterVal;
+            SetValue(cpu, orRegister, orRegisterVal);
+
+            //expected outcome
+            var cpuExpected = cpu.CopyState();
+            cpuExpected.Cycles = 4;
+            cpuExpected.ProgramCounter = 1;
+            cpuExpected.A = expectedResult;
+            cpuExpected.F = 0;
+            cpuExpected.ZeroFlag = expectedZeroFlag;
+
+            //execute & validate
+            cpu.Step();
+            ValidateState(cpuExpected, cpu);
+        }
+
         [TestMethod]
         public void TestNoop()
         {
@@ -317,6 +497,32 @@ namespace GbCoreTests
             //FIXME: memory
             Assert.AreEqual(cpuExpected.Mmu.DumpState(), cpu.Mmu.DumpState(), "Unexpected memory values");
 
+        }
+
+        [DataTestMethod]
+        [DataRow(true, (ushort)0x00, (ushort)0x02, (byte)0xFB, (uint)8)] //no action
+        [DataRow(false, (ushort)0x0A, (ushort)0x11, (byte)0x05, (uint)12)] //PC goes 10 -> 12 -> 17
+        [DataRow(false, (ushort)0x0A, (ushort)0x07, (byte)0xFB, (uint)12)] //0xFB = -5. PC goes 10 -> 12 -> 7
+        [DataRow(false, (ushort)0x00, (ushort)0xFFFD, (byte)0xFB, (uint)12)] //ushort wrap around
+        public void TestJR_NZ_r8(bool zeroFlag, ushort programCounterBefore, ushort expectedProgramCounterAfter, byte r8, uint expectedCycles)
+        {
+            //setup
+            var prog = new byte[256];
+            prog[programCounterBefore] = (byte)OpCode.JR_NZ_r8;
+            prog[programCounterBefore+1] = r8;
+            var mmu = new SimpleMmu(prog);
+            var cpu = new Cpu(mmu);
+            cpu.ProgramCounter = programCounterBefore;
+            cpu.ZeroFlag = zeroFlag;
+
+            //expected outcome
+            var cpuExpected = cpu.CopyState();
+            cpuExpected.Cycles = expectedCycles;
+            cpuExpected.ProgramCounter = expectedProgramCounterAfter;
+
+            //execute & validate
+            cpu.Step();
+            ValidateState(cpuExpected, cpu);
         }
 
         /*private uint GetValue(Cpu state, ChangeType type){

@@ -46,11 +46,26 @@ namespace GbCore
             ops = new Dictionary<OpCode, Action>()
             {
                 [OpCode.Noop] = () => { Cycles+=4; },
+
+                [OpCode.JR_NZ_r8] = () => {var r8 = (ushort)(sbyte)mmu.ReadByte(ProgramCounter); ProgramCounter++; if(ZeroFlag){Cycles+=8;} else {ProgramCounter += r8; Cycles+=12;}},
+
                 [OpCode.LD_BC_nn] = () => { BC = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
                 [OpCode.LD_DE_nn] = () => { DE = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
                 [OpCode.LD_HL_nn] = () => { HL = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
                 [OpCode.LD_SP_nn] = () => { StackPointer = mmu.ReadWord(ProgramCounter); ProgramCounter+=2; Cycles+=12; },
+
+                [OpCode.LDI_addrHL_A] = () => { mmu.WriteByte(HL, A); HL++; Cycles+=8; },
+                [OpCode.LDD_addrHL_A] = () => { mmu.WriteByte(HL, A); HL--; Cycles+=8; },
                 
+                [OpCode.LD_B_n] = () => { B = mmu.ReadByte(ProgramCounter); ProgramCounter++; Cycles+=8;},
+                [OpCode.LD_C_n] = () => { C = mmu.ReadByte(ProgramCounter); ProgramCounter++; Cycles+=8;},
+                [OpCode.LD_D_n] = () => { D = mmu.ReadByte(ProgramCounter); ProgramCounter++; Cycles+=8;},
+                [OpCode.LD_E_n] = () => { E = mmu.ReadByte(ProgramCounter); ProgramCounter++; Cycles+=8;},
+                [OpCode.LD_H_n] = () => { H = mmu.ReadByte(ProgramCounter); ProgramCounter++; Cycles+=8;},
+                [OpCode.LD_L_n] = () => { L = mmu.ReadByte(ProgramCounter); ProgramCounter++; Cycles+=8;},
+                [OpCode.LD_addrHL_n] = () => { mmu.WriteByte(HL, mmu.ReadByte(ProgramCounter)); ProgramCounter++; Cycles+=12;},
+                [OpCode.LD_A_n] = () => { A = mmu.ReadByte(ProgramCounter); ProgramCounter++; Cycles+=8;},
+
                 [OpCode.LD_B_B] = () => { B = B; Cycles+=4;},
                 [OpCode.LD_B_C] = () => { B = C; Cycles+=4;},
                 [OpCode.LD_B_D] = () => { B = D; Cycles+=4;},
@@ -131,6 +146,14 @@ namespace GbCore
                 [OpCode.Xor_E] = () => { A ^= E; Cycles+=4; F = 0; ZeroFlag = A == 0;},
                 [OpCode.Xor_H] = () => { A ^= H; Cycles+=4; F = 0; ZeroFlag = A == 0;},
                 [OpCode.Xor_L] = () => { A ^= L; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+
+                [OpCode.Or_A] = () => { A |= A; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Or_B] = () => { A |= B; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Or_C] = () => { A |= C; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Or_D] = () => { A |= D; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Or_E] = () => { A |= E; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Or_H] = () => { A |= H; Cycles+=4; F = 0; ZeroFlag = A == 0;},
+                [OpCode.Or_L] = () => { A |= L; Cycles+=4; F = 0; ZeroFlag = A == 0;},
             };
 
         }
