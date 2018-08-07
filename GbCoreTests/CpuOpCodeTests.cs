@@ -41,11 +41,11 @@ namespace GbCoreTests
             var cpuExpected = cpu.CopyState();
             cpuExpected.Cycles = 8;
             cpuExpected.ProgramCounter = 2;
-            SetValue(cpuExpected, register, 0xFE);
+            CpuHelpers.SetValue(cpuExpected, register, 0xFE);
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         [DataTestMethod]
@@ -64,11 +64,11 @@ namespace GbCoreTests
             var cpuExpected = cpu.CopyState();
             cpuExpected.Cycles = 12;
             cpuExpected.ProgramCounter = 3;
-            SetValue(cpuExpected, register, 0xEFFE);
+            CpuHelpers.SetValue(cpuExpected, register, 0xEFFE);
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         [DataTestMethod]
@@ -134,18 +134,18 @@ namespace GbCoreTests
             var prog = new byte[]{(byte)opCode}; //LD r,r
             var mmu = new SimpleMmu(prog);
             var cpu = new Cpu(mmu);
-            SetValue(cpu, targetRegister, 0xFF);
-            SetValue(cpu, sourceRegister, testValue);
+            CpuHelpers.SetValue(cpu, targetRegister, 0xFF);
+            CpuHelpers.SetValue(cpu, sourceRegister, testValue);
 
             //expected outcome
             var cpuExpected = cpu.CopyState();
             cpuExpected.Cycles = 4;
             cpuExpected.ProgramCounter = 1;
-            SetValue(cpuExpected, targetRegister, testValue);
+            CpuHelpers.SetValue(cpuExpected, targetRegister, testValue);
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         [DataTestMethod]
@@ -173,18 +173,18 @@ namespace GbCoreTests
             //put some nonsense in target register to make sure it changes
             //H/L are special cases as they affect the target address, so can't be altered
             if(targetRegister != ChangeType.H && targetRegister != ChangeType.L) {
-                SetValue(cpu, targetRegister, 0xFF);
+                CpuHelpers.SetValue(cpu, targetRegister, 0xFF);
             }
 
             //expected outcome
             var cpuExpected = cpu.CopyState();
             cpuExpected.Cycles = 8;
             cpuExpected.ProgramCounter = 1;
-            SetValue(cpuExpected, targetRegister, testValue);
+            CpuHelpers.SetValue(cpuExpected, targetRegister, testValue);
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         [DataTestMethod]
@@ -207,7 +207,7 @@ namespace GbCoreTests
             //put nonsense in target address
             mmu.WriteByte(testAddress, 0xFF);
             //set value in register to be copied
-            SetValue(cpu, sourceRegister, testValue);
+            CpuHelpers.SetValue(cpu, sourceRegister, testValue);
             //set HL to address to be copied to
             cpu.HL = testAddress;
 
@@ -219,7 +219,7 @@ namespace GbCoreTests
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         public void TestLdi_addrHL_A()
@@ -247,7 +247,7 @@ namespace GbCoreTests
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         public void TestLdd_addrHL_A()
@@ -275,7 +275,7 @@ namespace GbCoreTests
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         [TestMethod]
@@ -302,7 +302,7 @@ namespace GbCoreTests
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         [TestMethod]
@@ -327,7 +327,7 @@ namespace GbCoreTests
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         [DataTestMethod]
@@ -358,7 +358,7 @@ namespace GbCoreTests
             cpu.DE = 0xFF;
             cpu.HL = 0xFF;
             cpu.A = aRegisterVal;
-            SetValue(cpu, xorRegister, xorRegisterVal);
+            CpuHelpers.SetValue(cpu, xorRegister, xorRegisterVal);
 
             //expected outcome
             var cpuExpected = cpu.CopyState();
@@ -370,7 +370,7 @@ namespace GbCoreTests
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         [DataTestMethod]
@@ -398,7 +398,7 @@ namespace GbCoreTests
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         [DataTestMethod]
@@ -429,7 +429,7 @@ namespace GbCoreTests
             cpu.DE = 0xFF;
             cpu.HL = 0xFF;
             cpu.A = aRegisterVal;
-            SetValue(cpu, orRegister, orRegisterVal);
+            CpuHelpers.SetValue(cpu, orRegister, orRegisterVal);
 
             //expected outcome
             var cpuExpected = cpu.CopyState();
@@ -441,7 +441,7 @@ namespace GbCoreTests
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         [TestMethod]
@@ -463,40 +463,7 @@ namespace GbCoreTests
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
-        }
-
-        private void ValidateState(Cpu cpuExpected, Cpu cpu)
-        {
-            //flags
-            Assert.AreEqual(cpuExpected.ZeroFlag, cpu.ZeroFlag, "Unexpected ZeroFlag value!");
-            Assert.AreEqual(cpuExpected.CarryFlag, cpu.CarryFlag, "Unexpected CarryFlag value!");
-            Assert.AreEqual(cpuExpected.HalfCarryFlag, cpu.HalfCarryFlag, "Unexpected HalfCarryFlag value!");
-            Assert.AreEqual(cpuExpected.SubFlag, cpu.SubFlag, "Unexpected SubFlag value!");
-
-            //registers
-            Assert.AreEqual(cpuExpected.AF, cpu.AF, "Unexpected AF value!");
-            Assert.AreEqual(cpuExpected.BC, cpu.BC, "Unexpected BC value!");
-            Assert.AreEqual(cpuExpected.DE, cpu.DE, "Unexpected DE value!");
-            Assert.AreEqual(cpuExpected.HL, cpu.HL, "Unexpected HL value!");
-            
-            Assert.AreEqual(cpuExpected.A, cpu.A, "Unexpected A value!");
-            Assert.AreEqual(cpuExpected.B, cpu.B, "Unexpected B value!");
-            Assert.AreEqual(cpuExpected.C, cpu.C, "Unexpected C value!");
-            Assert.AreEqual(cpuExpected.D, cpu.D, "Unexpected D value!");
-            Assert.AreEqual(cpuExpected.E, cpu.E, "Unexpected E value!");
-            Assert.AreEqual(cpuExpected.F, cpu.F, "Unexpected F value!");
-            Assert.AreEqual(cpuExpected.H, cpu.H, "Unexpected H value!");
-            Assert.AreEqual(cpuExpected.L, cpu.L, "Unexpected L value!");
-
-            //CPU state
-            Assert.AreEqual(cpuExpected.ProgramCounter, cpu.ProgramCounter, "Unexpected ProgramCounter value!");
-            Assert.AreEqual(cpuExpected.StackPointer, cpu.StackPointer, "Unexpected StackPointer value!");
-            Assert.AreEqual(cpuExpected.Cycles, cpu.Cycles, "Unexpected Cycles value!");
-
-            //FIXME: memory
-            Assert.AreEqual(cpuExpected.Mmu.DumpState(), cpu.Mmu.DumpState(), "Unexpected memory values");
-
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
 
         [DataTestMethod]
@@ -522,75 +489,7 @@ namespace GbCoreTests
 
             //execute & validate
             cpu.Step();
-            ValidateState(cpuExpected, cpu);
-        }
-
-        /*private uint GetValue(Cpu state, ChangeType type){
-            switch(type){
-                case ChangeType.A:
-                    return state.A;
-                case ChangeType.AF:
-                    return state.AF;
-                case ChangeType.BC:
-                    return state.BC;
-                case ChangeType.DE:
-                    return state.DE;
-                case ChangeType.HL:
-                    return state.HL;
-                case ChangeType.StackPointer:
-                    return state.StackPointer;
-                case ChangeType.PC:
-                    return state.ProgramCounter;
-                case ChangeType.Cycles:
-                    return state.Cycles;
-            }
-            throw new InvalidOperationException("Unsupported ChangeType in GetValue");
-        }*/
-
-        private void SetValue(Cpu state, ChangeType type, uint value){
-            switch(type){
-                case ChangeType.A:
-                    state.A = (byte)value;
-                    return;
-                case ChangeType.B:
-                    state.B = (byte)value;
-                    return;
-                case ChangeType.C:
-                    state.C = (byte)value;
-                    return;
-                case ChangeType.D:
-                    state.D = (byte)value;
-                    return;
-                case ChangeType.E:
-                    state.E = (byte)value;
-                    return;
-                case ChangeType.H:
-                    state.H = (byte)value;
-                    return;
-                case ChangeType.L:
-                    state.L = (byte)value;
-                    return;
-                case ChangeType.AF:
-                    state.AF = (ushort)value;
-                    return;
-                case ChangeType.HL:
-                    state.HL = (ushort)value;
-                    return;
-                case ChangeType.BC:
-                    state.BC = (ushort)value;
-                    return;
-                case ChangeType.DE:
-                    state.DE = (ushort)value;
-                    return;
-                case ChangeType.StackPointer:
-                    state.StackPointer = (ushort)value;
-                    return;
-            }
-            throw new InvalidOperationException("Unsupported ChangeType in SetValue");
-        }
-
-        public enum ChangeType{
-            A, B, C, D, E, F, H, L, AF, BC, DE, HL, StackPointer, Cycles, PC
+            CpuHelpers.ValidateState(cpuExpected, cpu);
         }
     }
 }

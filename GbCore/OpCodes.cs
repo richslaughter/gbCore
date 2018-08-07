@@ -111,5 +111,7 @@ namespace GbCore
         Or_L =          0xB5,
         Or_addrHL =     0xB6, //
         Or_A =          0xB7,
+
+        CB =            0xCB,
     }
 }

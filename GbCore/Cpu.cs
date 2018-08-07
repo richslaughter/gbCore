@@ -154,8 +154,145 @@ namespace GbCore
                 [OpCode.Or_E] = () => { A |= E; Cycles+=4; F = 0; ZeroFlag = A == 0;},
                 [OpCode.Or_H] = () => { A |= H; Cycles+=4; F = 0; ZeroFlag = A == 0;},
                 [OpCode.Or_L] = () => { A |= L; Cycles+=4; F = 0; ZeroFlag = A == 0;},
-            };
 
+                [OpCode.CB] = () => { var arg = mmu.ReadByte(ProgramCounter); ProgramCounter++; ProcessBc(arg); Cycles+=8; },
+            };
+        }
+
+        private void ProcessBc(byte op)
+        {
+            //FIXME: handle (HL) for all these cases
+            if((op & 0b1100_0000) == 0b0100_0000) //test n r
+            {
+                var bitToTest = (byte)((op & 0b0011_1000) >> 3);
+                var reg = op & 0b0000_0111;
+                ZeroFlag = CheckBit((Register)reg, bitToTest);
+                SubFlag = false;
+                HalfCarryFlag = true;
+            } 
+            else if((op & 0b1100_0000) == 0b1100_0000) //set n r
+            {
+                var bitToSet = (byte)((op & 0b0011_1000) >> 3);
+                var reg = op & 0b0000_0111;
+                SetBit((Register)reg, (byte)(1 << bitToSet));
+            }
+            else if((op & 0b1100_0000) == 0b1000_0000) //reset n r
+            {
+                var bitToSet = (byte)((op & 0b0011_1000) >> 3);
+                var reg = op & 0b0000_0111;
+                ResetBit((Register)reg, (byte)~(1 << bitToSet));
+            }
+        }
+
+        byte[] bitMasks = {
+            0b0000_0001,
+            0b0000_0010,
+            0b0000_0100,
+            0b0000_1000,
+            0b0001_0000,
+            0b0010_0000,
+            0b0100_0000,
+            0b1000_0000,
+        };
+
+        private bool CheckBit(Register reg, byte bitToTest)
+        {
+            byte regValue = 0;
+            switch(reg){
+                case Register.B:
+                    regValue = B;
+                    break;
+                case Register.C:
+                    regValue = C;
+                    break;
+                case Register.D:
+                    regValue = D;
+                    break;
+                case Register.E:
+                    regValue = E;
+                    break;
+                case Register.H:
+                    regValue = H;
+                    break;
+                case Register.L:
+                    regValue = L;
+                    break;
+                case Register.A:
+                    regValue = A;
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+
+            return (regValue & bitMasks[bitToTest]) != 0;
+        }
+
+        private void SetBit(Register reg, byte bitMask)
+        {
+            switch(reg){
+                case Register.B:
+                    B |= bitMask;
+                    break;
+                case Register.C:
+                    C |= bitMask;
+                    break;
+                case Register.D:
+                    D |= bitMask;
+                    break;
+                case Register.E:
+                    E |= bitMask;
+                    break;
+                case Register.H:
+                    H |= bitMask;
+                    break;
+                case Register.L:
+                    L |= bitMask;
+                    break;
+                case Register.A:
+                    A |= bitMask;
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        private void ResetBit(Register reg, byte bitMask)
+        {
+            switch(reg){
+                case Register.B:
+                    B &= bitMask;
+                    break;
+                case Register.C:
+                    C &= bitMask;
+                    break;
+                case Register.D:
+                    D &= bitMask;
+                    break;
+                case Register.E:
+                    E &= bitMask;
+                    break;
+                case Register.H:
+                    H &= bitMask;
+                    break;
+                case Register.L:
+                    L &= bitMask;
+                    break;
+                case Register.A:
+                    A &= bitMask;
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        private enum Register{
+            B = 0b0000_0000,
+            C = 0b0000_0001,
+            D = 0b0000_0010,
+            E = 0b0000_0011,
+            H = 0b0000_0100,
+            L = 0b0000_0101,
+            A = 0b0000_0111,
         }
 
         public void Step()
