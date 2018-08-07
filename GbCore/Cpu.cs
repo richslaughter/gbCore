@@ -161,7 +161,6 @@ namespace GbCore
 
         private void ProcessBc(byte op)
         {
-            //FIXME: handle (HL) for all these cases
             if((op & 0b1100_0000) == 0b0100_0000) //test n r
             {
                 var bitToTest = (byte)((op & 0b0011_1000) >> 3);
@@ -195,6 +194,17 @@ namespace GbCore
             0b1000_0000,
         };
 
+        private enum Register{
+            B = 0b0000_0000,
+            C = 0b0000_0001,
+            D = 0b0000_0010,
+            E = 0b0000_0011,
+            H = 0b0000_0100,
+            L = 0b0000_0101,
+            aHL = 0b0000_0110,
+            A = 0b0000_0111,
+        }
+
         private bool CheckBit(Register reg, byte bitToTest)
         {
             byte regValue = 0;
@@ -216,6 +226,10 @@ namespace GbCore
                     break;
                 case Register.L:
                     regValue = L;
+                    break;
+                case Register.aHL:
+                    regValue = mmu.ReadByte(HL);
+                    Cycles += 8;
                     break;
                 case Register.A:
                     regValue = A;
@@ -248,6 +262,11 @@ namespace GbCore
                 case Register.L:
                     L |= bitMask;
                     break;
+                case Register.aHL:
+                    var arg = mmu.ReadByte(HL);
+                    mmu.WriteByte(HL, arg |= bitMask);
+                    Cycles += 8;
+                    break;
                 case Register.A:
                     A |= bitMask;
                     break;
@@ -277,22 +296,17 @@ namespace GbCore
                 case Register.L:
                     L &= bitMask;
                     break;
+                case Register.aHL:
+                    var arg = mmu.ReadByte(HL);
+                    mmu.WriteByte(HL, arg &= bitMask);
+                    Cycles += 8;
+                    break;
                 case Register.A:
                     A &= bitMask;
                     break;
                 default:
                     throw new InvalidOperationException();
             }
-        }
-
-        private enum Register{
-            B = 0b0000_0000,
-            C = 0b0000_0001,
-            D = 0b0000_0010,
-            E = 0b0000_0011,
-            H = 0b0000_0100,
-            L = 0b0000_0101,
-            A = 0b0000_0111,
         }
 
         public void Step()

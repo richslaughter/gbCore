@@ -18,6 +18,7 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
         public void TestBitWhenBitSet(ChangeType register)
         {
@@ -36,6 +37,7 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
         public void TestBitWhenAllBitsSet(ChangeType register)
         {
@@ -53,6 +55,7 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
         public void TestBitWhenBitNotSet(ChangeType register)
         {
@@ -71,8 +74,8 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
-        //TODO: HL
         public void TestBitWhenNoBitsSet(ChangeType register)
         {
             //foreach bit
@@ -87,15 +90,23 @@ namespace GbCoreTests
             //build opcode - 0b01<reg><bit>
             var opCode = 0b0100_0000 | (bitToCheck << 3) | (byte)register;
             //setup
-            var prog = new byte[]{0xCB, (byte)opCode};
-            var mmu = new SimpleMmu(prog);
+            var mem = new byte[256];
+            mem[0] = 0xCB;
+            mem[1] = (byte)opCode;
+            var aHL = (byte)0xF1;
+            var mmu = new SimpleMmu(mem);
             var cpu = new Cpu(mmu);
             cpu.F = 0;
-            CpuHelpers.SetValue(cpu, register, registerVal);
+            if(register == ChangeType.aHL){
+                cpu.HL = aHL;
+                mmu.WriteByte(aHL, registerVal);
+            } else {
+                CpuHelpers.SetValue(cpu, register, registerVal);
+            }
 
             //expected outcome
             var cpuExpected = cpu.CopyState();
-            cpuExpected.Cycles = 8;
+            cpuExpected.Cycles = (uint)(register == ChangeType.aHL ? 16 : 8);
             cpuExpected.ProgramCounter = 2;
             cpuExpected.ZeroFlag = expectedZeroFlag;
             cpuExpected.HalfCarryFlag = true;
@@ -114,8 +125,8 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
-        //TODO: HL
         public void TestSetBitWhenRegisterEmpty(ChangeType register)
         {
             //foreach bit
@@ -133,8 +144,8 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
-        //TODO: HL
         public void TestSetBitWhenRegisterFull(ChangeType register)
         {
             //foreach bit
@@ -151,8 +162,8 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
-        //TODO: HL
         public void TestSetBitWhenBitAlreadySet(ChangeType register)
         {
             //foreach bit
@@ -170,8 +181,8 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
-        //TODO: HL
         public void TestSetBitWhenOnlyBitNotSet(ChangeType register)
         {
             //foreach bit
@@ -187,21 +198,34 @@ namespace GbCoreTests
             //build opcode - 0b11<reg><bit>
             var opCode = 0b1100_0000 | (bitToSet << 3) | (byte)register;
             //setup
-            var prog = new byte[]{0xCB, (byte)opCode};
-            var mmu = new SimpleMmu(prog);
+            var mem = new byte[256];
+            mem[0] = 0xCB;
+            mem[1] = (byte)opCode;
+            var aHL = (byte)0xF1;
+            var mmu = new SimpleMmu(mem);
             var cpu = new Cpu(mmu);
             cpu.F = 0;
-            CpuHelpers.SetValue(cpu, register, registerInitialVal);
+            if(register == ChangeType.aHL){
+                cpu.HL = aHL;
+                mmu.WriteByte(aHL, registerInitialVal);
+            } else {
+                CpuHelpers.SetValue(cpu, register, registerInitialVal);
+            }
 
             //expected outcome
             var cpuExpected = cpu.CopyState();
-            cpuExpected.Cycles = 8;
+            cpuExpected.Cycles = (uint)(register == ChangeType.aHL ? 16 : 8);
             cpuExpected.ProgramCounter = 2;
             cpuExpected.ZeroFlag = false;
             cpuExpected.HalfCarryFlag = false;
             cpuExpected.SubFlag = false;
             cpuExpected.CarryFlag = false;
-            CpuHelpers.SetValue(cpuExpected, register, expectedRegisterVal);
+            if(register == ChangeType.aHL){
+                cpuExpected.Mmu.WriteByte(aHL, expectedRegisterVal);
+            } else {
+                CpuHelpers.SetValue(cpuExpected, register, expectedRegisterVal);
+            }
+            
 
             //execute & validate
             cpu.Step();
@@ -215,8 +239,8 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
-        //TODO: HL
         public void TestResetBitWhenRegisterEmpty(ChangeType register)
         {
             //foreach bit
@@ -233,8 +257,8 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
-        //TODO: HL
         public void TestResetBitWhenRegisterFull(ChangeType register)
         {
             //foreach bit
@@ -252,8 +276,8 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
-        //TODO: HL
         public void TestResetBitWhenBitSet(ChangeType register)
         {
             //foreach bit
@@ -271,8 +295,8 @@ namespace GbCoreTests
         [DataRow(ChangeType.E)]
         [DataRow(ChangeType.H)]
         [DataRow(ChangeType.L)]
+        [DataRow(ChangeType.aHL)]
         [DataRow(ChangeType.A)]
-        //TODO: HL
         public void TestResetBitWhenBitNotSet(ChangeType register)
         {
             //foreach bit
@@ -288,22 +312,34 @@ namespace GbCoreTests
             //build opcode - 0b11<reg><bit>
             var opCode = 0b1000_0000 | (bitToSet << 3) | (byte)register;
             //setup
-            var prog = new byte[]{0xCB, (byte)opCode};
-            var mmu = new SimpleMmu(prog);
+            var mem = new byte[256];
+            mem[0] = 0xCB;
+            mem[1] = (byte)opCode;
+            var aHL = (byte)0xF1;
+            var mmu = new SimpleMmu(mem);
             var cpu = new Cpu(mmu);
             cpu.F = 0;
-            CpuHelpers.SetValue(cpu, register, registerInitialVal);
+            if(register == ChangeType.aHL){
+                cpu.HL = aHL;
+                mmu.WriteByte(aHL, registerInitialVal);
+            } else {
+                CpuHelpers.SetValue(cpu, register, registerInitialVal);
+            }            
 
             //expected outcome
             var cpuExpected = cpu.CopyState();
-            cpuExpected.Cycles = 8;
+            cpuExpected.Cycles = (uint)(register == ChangeType.aHL ? 16 : 8);
             cpuExpected.ProgramCounter = 2;
             cpuExpected.ZeroFlag = false;
             cpuExpected.HalfCarryFlag = false;
             cpuExpected.SubFlag = false;
             cpuExpected.CarryFlag = false;
-            CpuHelpers.SetValue(cpuExpected, register, expectedRegisterVal);
-
+            if(register == ChangeType.aHL){
+                cpuExpected.Mmu.WriteByte(aHL, expectedRegisterVal);
+            } else {
+                CpuHelpers.SetValue(cpuExpected, register, expectedRegisterVal);
+            }
+            
             //execute & validate
             cpu.Step();
             CpuHelpers.ValidateState(cpuExpected, cpu);

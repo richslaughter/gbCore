@@ -10,6 +10,7 @@ namespace GbCore
         E = 0b0000_0011,
         H = 0b0000_0100,
         L = 0b0000_0101,
+        aHL = 0b0000_0110,
         A = 0b0000_0111,
         F, AF, BC, DE, HL, StackPointer, Cycles, PC
     }
