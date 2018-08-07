@@ -45,8 +45,8 @@ namespace GbCore
             Assert.AreEqual(cpuExpected.StackPointer, cpu.StackPointer, "Unexpected StackPointer value!");
             Assert.AreEqual(cpuExpected.Cycles, cpu.Cycles, "Unexpected Cycles value!");
 
-            //FIXME: memory
-            Assert.AreEqual(cpuExpected.Mmu.DumpState(), cpu.Mmu.DumpState(), "Unexpected memory values");
+            //memory
+            CollectionAssert.AreEqual(cpuExpected.Mmu.DumpState(), cpu.Mmu.DumpState(), "Unexpected memory values");
 
         }
 

@@ -161,25 +161,90 @@ namespace GbCore
 
         private void ProcessBc(byte op)
         {
-            if((op & 0b1100_0000) == 0b0100_0000) //test n r
+            var rotateMask = (byte)0b1111_1000;
+            var bitTestMask = (byte)0b1100_0000;
+
+            var reg = (Register)(op & 0b0000_0111);
+
+            if((op & bitTestMask) == 0b0100_0000) //test n r
             {
                 var bitToTest = (byte)((op & 0b0011_1000) >> 3);
-                var reg = op & 0b0000_0111;
-                ZeroFlag = CheckBit((Register)reg, bitToTest);
+                var regValue = GetValue(reg);
+                ZeroFlag = (regValue & bitMasks[bitToTest]) != 0;
                 SubFlag = false;
                 HalfCarryFlag = true;
+                if(reg == Register.aHL) Cycles += 4;
             } 
-            else if((op & 0b1100_0000) == 0b1100_0000) //set n r
+            else if((op & bitTestMask) == 0b1100_0000) //set n r
             {
                 var bitToSet = (byte)((op & 0b0011_1000) >> 3);
-                var reg = op & 0b0000_0111;
-                SetBit((Register)reg, (byte)(1 << bitToSet));
+                var regValue = GetValue(reg);
+                regValue |= (byte)(1 << bitToSet);
+                SetValue(reg, regValue);
+                if(reg == Register.aHL) Cycles += 4;
             }
-            else if((op & 0b1100_0000) == 0b1000_0000) //reset n r
+            else if((op & bitTestMask) == 0b1000_0000) //reset n r
             {
                 var bitToSet = (byte)((op & 0b0011_1000) >> 3);
-                var reg = op & 0b0000_0111;
-                ResetBit((Register)reg, (byte)~(1 << bitToSet));
+                var regValue = GetValue(reg);
+                regValue &= (byte)~(1 << bitToSet);
+                SetValue(reg, regValue);
+                if(reg == Register.aHL) Cycles += 4;
+            }
+            else if((op & rotateMask) == 0b0000_0000) //RLC r 0b0000_0rrr
+            {
+                var regValue = GetValue(reg);    
+                
+                //rotate left, set carry flag and copy bit 7->0
+                CarryFlag = (regValue & 0b1000_0000) > 0;
+                regValue = (byte)((byte)(regValue << 1) | regValue >> 7);               
+                
+                SetValue(reg, regValue);
+                ZeroFlag = regValue == 0;
+                HalfCarryFlag = false;
+                SubFlag = false;
+                if(reg == Register.aHL) Cycles += 4;
+            }
+            else if((op & rotateMask) == 0b0000_1000) //RRC r 0b0000_1rrr
+            {
+                var regValue = GetValue(reg);
+                //rotate right, set carry flag based on old bit 0, copy bit 0->7
+                CarryFlag = (regValue & 0b0000_0001) > 0;
+                regValue = (byte)((byte)(regValue >> 1) | ((regValue & 0x01) << 7));
+                SetValue(reg, regValue);
+
+                ZeroFlag = regValue == 0;
+                HalfCarryFlag = false;
+                SubFlag = false;
+                if(reg == Register.aHL) Cycles += 4;
+            }
+            else if((op & rotateMask) == 0b0001_0000) //RL r  0b0001_0rrr       
+            {
+                var regValue = GetValue(reg);
+                //rotate left, set carry flag and copy carry flag -> 0
+                var OldCarryMask = (byte)(CarryFlag ? 0x01 : 0x00);
+                CarryFlag = (regValue & 0b1000_0000) > 0;
+                regValue = (byte)((byte)(regValue << 1) | OldCarryMask);  
+                SetValue(reg, regValue);
+
+                ZeroFlag = regValue == 0;
+                HalfCarryFlag = false;
+                SubFlag = false;
+                if(reg == Register.aHL) Cycles += 4;
+            }
+            else if((op & rotateMask) == 0b0001_1000) //RR r  0x0001_1rrr
+            {
+                var regValue = GetValue(reg);
+                //rotate right, set carry flag and copy carry flag -> 7
+                var OldCarryMask = (byte)(CarryFlag ? 0x80 : 0x00);
+                CarryFlag = (regValue & 0b0000_0001) > 0;
+                regValue = (byte)((byte)(regValue >> 1) | OldCarryMask);  
+                SetValue(reg, regValue);
+
+                ZeroFlag = regValue == 0;
+                HalfCarryFlag = false;
+                SubFlag = false;
+                if(reg == Register.aHL) Cycles += 4;
             }
         }
 
@@ -205,104 +270,56 @@ namespace GbCore
             A = 0b0000_0111,
         }
 
-        private bool CheckBit(Register reg, byte bitToTest)
-        {
-            byte regValue = 0;
-            switch(reg){
-                case Register.B:
-                    regValue = B;
-                    break;
-                case Register.C:
-                    regValue = C;
-                    break;
-                case Register.D:
-                    regValue = D;
-                    break;
-                case Register.E:
-                    regValue = E;
-                    break;
-                case Register.H:
-                    regValue = H;
-                    break;
-                case Register.L:
-                    regValue = L;
-                    break;
-                case Register.aHL:
-                    regValue = mmu.ReadByte(HL);
-                    Cycles += 4;
-                    break;
-                case Register.A:
-                    regValue = A;
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-
-            return (regValue & bitMasks[bitToTest]) != 0;
-        }
-
-        private void SetBit(Register reg, byte bitMask)
+        private byte GetValue(Register reg)
         {
             switch(reg){
                 case Register.B:
-                    B |= bitMask;
-                    break;
+                    return B;
                 case Register.C:
-                    C |= bitMask;
-                    break;
+                    return C;
                 case Register.D:
-                    D |= bitMask;
-                    break;
+                    return D;
                 case Register.E:
-                    E |= bitMask;
-                    break;
+                    return E;
                 case Register.H:
-                    H |= bitMask;
-                    break;
+                    return H;
                 case Register.L:
-                    L |= bitMask;
-                    break;
+                    return L;
                 case Register.aHL:
-                    var arg = mmu.ReadByte(HL);
-                    mmu.WriteByte(HL, arg |= bitMask);
-                    Cycles += 4;
-                    break;
+                    return mmu.ReadByte(HL);
                 case Register.A:
-                    A |= bitMask;
-                    break;
+                    return A;
                 default:
                     throw new InvalidOperationException();
             }
         }
 
-        private void ResetBit(Register reg, byte bitMask)
+        private void SetValue(Register reg, byte val)
         {
             switch(reg){
                 case Register.B:
-                    B &= bitMask;
+                    B = val;
                     break;
                 case Register.C:
-                    C &= bitMask;
+                    C = val;
                     break;
                 case Register.D:
-                    D &= bitMask;
+                    D = val;
                     break;
                 case Register.E:
-                    E &= bitMask;
+                    E = val;
                     break;
                 case Register.H:
-                    H &= bitMask;
+                    H = val;
                     break;
                 case Register.L:
-                    L &= bitMask;
+                    L = val;
                     break;
                 case Register.aHL:
-                    var arg = mmu.ReadByte(HL);
-                    mmu.WriteByte(HL, arg &= bitMask);
-                    Cycles += 4;
+                    mmu.WriteByte(HL, val);
                     break;
                 case Register.A:
-                    A &= bitMask;
+                    A = val;
                     break;
                 default:
                     throw new InvalidOperationException();

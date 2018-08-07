@@ -199,13 +199,17 @@ namespace GbCoreTests
         {
             //setup
             byte testValue = 0x0E;
-            ushort testAddress = 0xF1;
-            var prog = new byte[256];
+            //H/L are special cases as they hold the address AND the value
+            if(sourceRegister == ChangeType.H) testValue = 0x01;
+            if(sourceRegister == ChangeType.L) testValue = 0xF1;
+            ushort testAddress = 0x01F1;
+            var prog = new byte[512];
             prog[0] = (byte)opCode; //LD r,(HL)
             var mmu = new SimpleMmu(prog);
             var cpu = new Cpu(mmu);
             //put nonsense in target address
             mmu.WriteByte(testAddress, 0xFF);
+
             //set value in register to be copied
             CpuHelpers.SetValue(cpu, sourceRegister, testValue);
             //set HL to address to be copied to

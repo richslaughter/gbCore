@@ -29,7 +29,7 @@ namespace GbCoreTests
 
         public IMmu CopyState()
         {
-            return new SimpleMmu(_data);
+            return new SimpleMmu((byte[])_data.Clone());
         }
 
         public byte[] DumpState(){
