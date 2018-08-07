@@ -229,7 +229,7 @@ namespace GbCore
                     break;
                 case Register.aHL:
                     regValue = mmu.ReadByte(HL);
-                    Cycles += 8;
+                    Cycles += 4;
                     break;
                 case Register.A:
                     regValue = A;
@@ -265,7 +265,7 @@ namespace GbCore
                 case Register.aHL:
                     var arg = mmu.ReadByte(HL);
                     mmu.WriteByte(HL, arg |= bitMask);
-                    Cycles += 8;
+                    Cycles += 4;
                     break;
                 case Register.A:
                     A |= bitMask;
@@ -299,7 +299,7 @@ namespace GbCore
                 case Register.aHL:
                     var arg = mmu.ReadByte(HL);
                     mmu.WriteByte(HL, arg &= bitMask);
-                    Cycles += 8;
+                    Cycles += 4;
                     break;
                 case Register.A:
                     A &= bitMask;

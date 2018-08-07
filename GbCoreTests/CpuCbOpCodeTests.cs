@@ -106,7 +106,7 @@ namespace GbCoreTests
 
             //expected outcome
             var cpuExpected = cpu.CopyState();
-            cpuExpected.Cycles = (uint)(register == ChangeType.aHL ? 16 : 8);
+            cpuExpected.Cycles = (uint)(register == ChangeType.aHL ? 12 : 8);
             cpuExpected.ProgramCounter = 2;
             cpuExpected.ZeroFlag = expectedZeroFlag;
             cpuExpected.HalfCarryFlag = true;
@@ -214,7 +214,7 @@ namespace GbCoreTests
 
             //expected outcome
             var cpuExpected = cpu.CopyState();
-            cpuExpected.Cycles = (uint)(register == ChangeType.aHL ? 16 : 8);
+            cpuExpected.Cycles = (uint)(register == ChangeType.aHL ? 12 : 8);
             cpuExpected.ProgramCounter = 2;
             cpuExpected.ZeroFlag = false;
             cpuExpected.HalfCarryFlag = false;
@@ -328,7 +328,7 @@ namespace GbCoreTests
 
             //expected outcome
             var cpuExpected = cpu.CopyState();
-            cpuExpected.Cycles = (uint)(register == ChangeType.aHL ? 16 : 8);
+            cpuExpected.Cycles = (uint)(register == ChangeType.aHL ? 12 : 8);
             cpuExpected.ProgramCounter = 2;
             cpuExpected.ZeroFlag = false;
             cpuExpected.HalfCarryFlag = false;
